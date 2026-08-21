@@ -1,22 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import InquiryForm from './components/InquiryForm'
 
-function Logo() {
-  return <a className="logo" href="#business" aria-label="Benta business"><img className="logo-image" src="/Benta.jpeg" alt="" /><span>Benta</span></a>
+function Logo({ onClick }) {
+  return <a className="logo" href="#business" aria-label="Benta business" onClick={onClick}><span className="logo-mark"><img className="logo-image" src="/Benta.jpeg" alt="" /></span><span>Benta</span></a>
 }
 
 function Navbar() {
   const [open, setOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('business')
+
+  useEffect(() => {
+    const sections = ['business', 'inquiry']
+      .map(id => document.getElementById(id))
+      .filter(Boolean)
+    if (!sections.length) return undefined
+
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.find(entry => entry.isIntersecting)
+      if (visible) setActiveSection(visible.target.id)
+    }, { rootMargin: '-42% 0px -42% 0px', threshold: 0 })
+
+    sections.forEach(section => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
+
   const close = () => setOpen(false)
+  const navigateTo = section => {
+    setActiveSection(section)
+    close()
+  }
+
   return <header className="navbar">
     <div className="container nav-inner">
-      <Logo />
+      <Logo onClick={() => navigateTo('business')} />
       <nav id="main-navigation" className={`nav-links ${open ? 'open' : ''}`} aria-label="Main navigation">
-        <a href="#business" onClick={close}>Business</a>
-        <a className="mobile-menu-link" href="#inquiry" onClick={close}>Inquiry</a>
+        <a className={activeSection === 'business' ? 'active' : ''} href="#business" aria-current={activeSection === 'business' ? 'location' : undefined} onClick={() => navigateTo('business')}>Business</a>
+        <a className={`mobile-menu-link ${activeSection === 'inquiry' ? 'active' : ''}`} href="#inquiry" aria-current={activeSection === 'inquiry' ? 'location' : undefined} onClick={() => navigateTo('inquiry')}>Inquiry</a>
       </nav>
       <div className="nav-actions">
-        <a className="nav-inquiry" href="#inquiry" onClick={close}>Inquiry <span aria-hidden="true">↗</span></a>
+        <a className={`nav-inquiry ${activeSection === 'inquiry' ? 'active' : ''}`} href="#inquiry" aria-current={activeSection === 'inquiry' ? 'location' : undefined} onClick={() => navigateTo('inquiry')}>Inquiry <span aria-hidden="true">↗</span></a>
         <button className="menu-toggle" type="button" aria-label={open ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={open} aria-controls="main-navigation" onClick={() => setOpen(!open)}>
           <span className="menu-bar"></span><span className="menu-bar"></span><span className="sr-only">Menu</span>
         </button>
